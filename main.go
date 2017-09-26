@@ -44,7 +44,7 @@ func SaveRabbit(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(gameid))
 }
 
-func main() {
+func main1() {
 	dt("2", "2")
 	fmt.Println("Hello World!")
 	http.HandleFunc("/adt", SaveRabbit)

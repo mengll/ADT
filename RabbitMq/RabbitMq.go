@@ -10,40 +10,41 @@ import (
 
 type RabbitMq struct {
 	urls    string
-	channel *amqp.Channel
+	Channel *amqp.Channel
+	Conn    *amqp.Connection
 }
 
 //decaleTYpe
 
 type DeclareType struct {
-	name      string
-	durable   bool
-	unusedDel bool
-	exclusive bool
-	nowait    bool
-	args      interface{}
+	Name      string
+	Durable   bool
+	UnusedDel bool
+	Exclusive bool
+	Nowait    bool
+	Args      amqp.Table
 }
 
 //create publish data
 type PublishDat struct {
-	exchange  string
-	routerkey string
-	mandatory bool
-	immediate bool
-	body      string
-	name      string //queue name
+	Exchange  string
+	Routerkey string
+	Mandatory bool
+	Immediate bool
+	Body      string
+	Name      string //queue name
 }
 
 //create Consume datatype
 
 type ConsumeType struct {
-	queue     string
-	consumer  string
-	autoack   bool
-	exclusive bool
-	nolocal   bool
-	nowait    bool
-	args      interface{}
+	Queue     string
+	Consumer  string
+	Autoack   bool
+	Exclusive bool
+	Nolocal   bool
+	Nowait    bool
+	Args      interface{}
 }
 
 func failOnError(err error, msg string) {
@@ -62,53 +63,72 @@ func NewRabbitMq(ct string) *RabbitMq {
 	return &RabbitMq{urls: ct}
 }
 
+func (self *RabbitMq) Closeq() {
+	self.Channel.Close()
+}
+
 //connect the rabbitserver
-func (self *RabbitMq) connect() {
+func (self *RabbitMq) Connect() {
 	conn, err := amqp.Dial(self.urls)
-	defer conn.Close()
+	self.Conn = conn
 	failOnError(err, "rabbit connect error")
 
 	channel, erra := conn.Channel()
-	defer channel.Close()
-	failOnError(erra)
-	self.channel = channel //set the data
+
+	failOnError(erra, "oso")
+	self.Channel = channel //set the data
 }
 
 //create a new decear
-func (self *RabbitMq) NewDeclare() *DeclareType {
-	return &DeclareType{durable: false, unusedDel: false, exclusive: false, nowait: false, args: nil}
+func (self *RabbitMq) NewDeclareType() *DeclareType {
+	return &DeclareType{Durable: false, UnusedDel: false, Exclusive: false, Nowait: false}
 }
 
 //create a
 
-func (self *RabbitMq) NewQueueDeclare(dtype DeclareType) amqp.Queue {
-	q, err := self.channel.QueueDeclare(dtype.qname, dtype.durable, dtype.unusedDel, dtype.exclusive, dtype.nowait, dtype.args)
-	failOnError(err)
+func (self *RabbitMq) NewQueueDeclare(dtype *DeclareType) amqp.Queue {
+	defer func() {
+		if err := recover(); err != nil {
+			fmt.Println("cuowu", dtype)
+			fmt.Println(self.Channel)
+		}
+
+	}()
+
+	q, err := self.Channel.QueueDeclare(dtype.Name, dtype.Durable, dtype.UnusedDel, dtype.Exclusive, dtype.Nowait, dtype.Args)
+	fmt.Println(q, ">><")
+	failOnError(err, "e")
 	return q
 }
 
 //create of publish data
 
 func (self *RabbitMq) NewPublicDat(q amqp.Queue) *PublishDat {
-	return &PublishDat{mandatory: false, immediate: false, name: q.Name}
+	return &PublishDat{Mandatory: false, Immediate: false, Name: q.Name}
 }
 
 //send the data to rabbit
 func (self *RabbitMq) PublishTo(dat *PublishDat) {
-	err := self.channel.Publish(dat.exchange, dat.name, dat.mandatory, dat.immediate, amqp.Publishing{ContentType: "text/plain", Body: []byte(dat.body)})
+	defer func() {
+		if err := recover(); err != nil {
+			fmt.Println("one tow one ")
+		}
+	}()
+
+	err := self.Channel.Publish(dat.Exchange, dat.Name, dat.Mandatory, dat.Immediate, amqp.Publishing{ContentType: "text/plain", Body: []byte(dat.Body)})
 	failOnError(err, "publish data error")
 }
 
 //create new consuedata
 
 func (self *RabbitMq) NewConsumeDat(q amqp.Queue) *ConsumeType {
-	return &ConsumeType{queue: q.Name, consumer: false, autoack: true, exclusive: false, nolocal: false, nowait: false, args: nil}
+	return &ConsumeType{Queue: q.Name, Autoack: true, Exclusive: false, Nolocal: false, Nowait: false, Args: nil}
 }
 
 //create consumeDat
 
 func (self *RabbitMq) NewConsume(dat *ConsumeType) <-chan amqp.Delivery {
-	msgs, err := self.channel.Consume(dat.queue, dat.consumer, dat.autoack, dat.exclusive, dat.nolocal, dat.nowait, dat.args)
+	msgs, err := self.Channel.Consume(dat.Queue, dat.Consumer, dat.Autoack, dat.Exclusive, dat.Nolocal, dat.Nowait, nil)
 	failOnError(err, "newConsue error")
 	return msgs
 }
