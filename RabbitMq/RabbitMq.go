@@ -31,6 +31,19 @@ type PublishDat struct {
 	mandatory bool
 	immediate bool
 	body      string
+	name      string //queue name
+}
+
+//create Consume datatype
+
+type ConsumeType struct {
+	queue     string
+	consumer  string
+	autoack   bool
+	exclusive bool
+	nolocal   bool
+	nowait    bool
+	args      interface{}
 }
 
 func failOnError(err error, msg string) {
@@ -62,7 +75,7 @@ func (self *RabbitMq) connect() {
 }
 
 //create a new decear
-func (self *RabbitMq) NewDeclare() {
+func (self *RabbitMq) NewDeclare() *DeclareType {
 	return &DeclareType{durable: false, unusedDel: false, exclusive: false, nowait: false, args: nil}
 }
 
@@ -76,12 +89,26 @@ func (self *RabbitMq) NewQueueDeclare(dtype DeclareType) amqp.Queue {
 
 //create of publish data
 
-func (self *RabbitMq) NewPublicDat() {
-	return &PublishDat{mandatory: false, immediate: false}
+func (self *RabbitMq) NewPublicDat(q amqp.Queue) *PublishDat {
+	return &PublishDat{mandatory: false, immediate: false, name: q.Name}
 }
 
 //send the data to rabbit
-func (self *RabbitMq) PublishTo(dat PublishDat, q amqp.Queue) {
-	err := self.channel.Publish(dat.exchange, q.Name, dat.mandatory, dat.immediate, amqp.Publishing{ContentType: "text/plain", Body: []byte(dat.body)})
+func (self *RabbitMq) PublishTo(dat *PublishDat) {
+	err := self.channel.Publish(dat.exchange, dat.name, dat.mandatory, dat.immediate, amqp.Publishing{ContentType: "text/plain", Body: []byte(dat.body)})
 	failOnError(err, "publish data error")
+}
+
+//create new consuedata
+
+func (self *RabbitMq) NewConsumeDat(q amqp.Queue) *ConsumeType {
+	return &ConsumeType{queue: q.Name, consumer: false, autoack: true, exclusive: false, nolocal: false, nowait: false, args: nil}
+}
+
+//create consumeDat
+
+func (self *RabbitMq) NewConsume(dat *ConsumeType) <-chan amqp.Delivery {
+	msgs, err := self.channel.Consume(dat.queue, dat.consumer, dat.autoack, dat.exclusive, dat.nolocal, dat.nowait, dat.args)
+	failOnError(err, "newConsue error")
+	return msgs
 }
