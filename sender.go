@@ -2,7 +2,6 @@ package main
 
 import (
 	"ADT/RabbitMq"
-	"fmt"
 )
 
 func main() {
@@ -15,14 +14,11 @@ func main() {
 	qudeclare.Name = "fjk"
 	//4 new declare dat
 	q := rabbitmq.NewQueueDeclare(qudeclare)
-	fmt.Println(q)
-	fmt.Println("-------------------->")
-	pdat := rabbitmq.NewPublicDat(q)
 
-	pdat.Body = "fjsa"
+	pdat := rabbitmq.NewPublicDat(q)
+	pdat.Body = "fjsa" // the data message!
 	pdat.Name = q.Name
-	pdat.Exchange = "logs"
+	pdat.Exchange = ""
 
 	rabbitmq.PublishTo(pdat)
-
 }

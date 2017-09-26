@@ -96,7 +96,6 @@ func (self *RabbitMq) NewQueueDeclare(dtype *DeclareType) amqp.Queue {
 	}()
 
 	q, err := self.Channel.QueueDeclare(dtype.Name, dtype.Durable, dtype.UnusedDel, dtype.Exclusive, dtype.Nowait, dtype.Args)
-	fmt.Println(q, ">><")
 	failOnError(err, "e")
 	return q
 }
