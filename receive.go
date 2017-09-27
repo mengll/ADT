@@ -2,31 +2,62 @@ package main
 
 import (
 	"ADT/RabbitMq"
+	"fmt"
 	"log"
 )
 
 func main() {
-	//1 shuchushua
-	rabbitmq := RabbitMq.NewRabbitMq("amqp://guest:guest@localhost:5672/")
+
+	//1 create all
+	ch := RabbitMq.NewRabbitMq("amqp://guest:guest@127.0.0.1:5672/")
 	//2 connect
-	rabbitmq.Connect()
-	//3 create declaretype
-	qudeclare := rabbitmq.NewDeclareType()
-	qudeclare.Name = "fjk"
+	ch.Connect()
+	//close
+	defer ch.Closeq()
 
-	//4 new declare dat
-	q := rabbitmq.NewQueueDeclare(qudeclare)
+	//3 crewate exchangetype
+	exdata := ch.NewExchangeDecType()
+	exdata.Name = "logs_direct"
+	exdata.Type = "direct"
+	exdata.Durable = true
 
-	da := rabbitmq.NewConsumeDat(q)
+	//4
+	ch.NewExchangeDec(exdata)
+
+	//5 queue data
+
+	queuedat := ch.NewDeclareType()
+	queuedat.Name = ""
+	queuedat.Exclusive = true
+
+	//6
+	q := ch.NewQueueDeclare(queuedat)
+
+	//7 binddata
+	fmt.Println(q.Name)
+
+	ch.QueueBind(q.Name, "black_meng", exdata.Name)
+
+	//8 consume dat
+
+	consuedat := ch.NewConsumeDatType(q)
+	consuedat.Autoack = true
+
+	consuedat.Queue = q.Name
+	consuedat.Consumer = ""
+
+	//9
+	msg := ch.NewConsume(consuedat)
+
 	forever := make(chan bool)
-	msg := rabbitmq.NewConsume(da)
 
 	go func() {
 		for d := range msg {
-			log.Printf("Received a message: %s", d.Body)
+			log.Printf(" [x] %s", d.Body)
 		}
 	}()
 
+	log.Printf(" [*] Waiting for logs. To exit press CTRL+C")
 	<-forever
 
 }
