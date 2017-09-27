@@ -60,6 +60,17 @@ type QosType struct {
 	Global        bool
 }
 
+//exchange data type
+type ExchangeDeclareType struct {
+	Name     string
+	Type     string
+	Durable  bool
+	AutoDel  bool
+	Internal bool
+	Nowait   bool
+	Args     amqp.Table
+}
+
 func failOnError(err error, msg string) {
 	if err != nil {
 		log.Fatalf("%s: %s", msg, err)
@@ -143,4 +154,9 @@ func (self *RabbitMq) NewConsume(dat *ConsumeType) <-chan amqp.Delivery {
 //set the Qos size
 func (self *RabbitMq) SetQos(dat *QosType) {
 	err := self.Channel.Qos(dat.PrefetchCount, dat.PrefetchSize, dat.Global)
+}
+
+//create a dat type
+func (self *RabbitMq) NewExchangeDecType() *ExchangeDeclareType {
+	return &ExchangeDeclareType{Durable: false, AutoDel: false, Internal: false, Nowait: false}
 }
