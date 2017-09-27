@@ -2,7 +2,7 @@
 /*
 *@author menglingliang
 *@email 1633094010@qq.com
-*@describ go rabbitmq manager lib
+*@describ go rabbitmq manager lib not include rpc manager
  */
 package RabbitMq
 
@@ -154,9 +154,15 @@ func (self *RabbitMq) NewConsume(dat *ConsumeType) <-chan amqp.Delivery {
 //set the Qos size
 func (self *RabbitMq) SetQos(dat *QosType) {
 	err := self.Channel.Qos(dat.PrefetchCount, dat.PrefetchSize, dat.Global)
+	failOnError(err, "Set Qos size error")
 }
 
 //create a dat type
 func (self *RabbitMq) NewExchangeDecType() *ExchangeDeclareType {
 	return &ExchangeDeclareType{Durable: false, AutoDel: false, Internal: false, Nowait: false}
+}
+
+//create queuebind
+func (self *RabbitMq) QueueBind(queuename, routerkey, exchange string) {
+	err := self.Channel.QueueBind(queuename, routerkey, exchange, false, nil)
 }
