@@ -1,4 +1,9 @@
 // RabbitMq project RabbitMq.go
+/*
+*@author menglingliang
+*@email 1633094010@qq.com
+*@describ go rabbitmq manager lib
+ */
 package RabbitMq
 
 import (
@@ -44,7 +49,15 @@ type ConsumeType struct {
 	Exclusive bool
 	Nolocal   bool
 	Nowait    bool
-	Args      interface{}
+	Args      amqp.Table
+}
+
+//create QOS
+
+type QosType struct {
+	PrefetchCount int
+	PrefetchSize  int
+	Global        bool
 }
 
 func failOnError(err error, msg string) {
@@ -53,11 +66,6 @@ func failOnError(err error, msg string) {
 		panic(fmt.Sprintf("%s: %s", msg, err))
 	}
 }
-
-/*
-*@author menglingliang
-*@email 1633094010@qq.com
- */
 
 func NewRabbitMq(ct string) *RabbitMq {
 	return &RabbitMq{urls: ct}
@@ -102,7 +110,7 @@ func (self *RabbitMq) NewQueueDeclare(dtype *DeclareType) amqp.Queue {
 
 //create of publish data
 
-func (self *RabbitMq) NewPublicDat(q amqp.Queue) *PublishDat {
+func (self *RabbitMq) NewPublicDatType(q amqp.Queue) *PublishDat {
 	return &PublishDat{Mandatory: false, Immediate: false, Name: q.Name}
 }
 
@@ -114,13 +122,13 @@ func (self *RabbitMq) PublishTo(dat *PublishDat) {
 		}
 	}()
 
-	err := self.Channel.Publish(dat.Exchange, dat.Name, dat.Mandatory, dat.Immediate, amqp.Publishing{ContentType: "text/plain", Body: []byte(dat.Body)})
+	err := self.Channel.Publish(dat.Exchange, dat.Name, dat.Mandatory, dat.Immediate, amqp.Publishing{DeliveryMode: amqp.Persistent, ContentType: "text/plain", Body: []byte(dat.Body)})
 	failOnError(err, "publish data error")
 }
 
 //create new consuedata
 
-func (self *RabbitMq) NewConsumeDat(q amqp.Queue) *ConsumeType {
+func (self *RabbitMq) NewConsumeDatType(q amqp.Queue) *ConsumeType {
 	return &ConsumeType{Queue: q.Name, Autoack: true, Exclusive: false, Nolocal: false, Nowait: false, Args: nil}
 }
 
@@ -130,4 +138,9 @@ func (self *RabbitMq) NewConsume(dat *ConsumeType) <-chan amqp.Delivery {
 	msgs, err := self.Channel.Consume(dat.Queue, dat.Consumer, dat.Autoack, dat.Exclusive, dat.Nolocal, dat.Nowait, nil)
 	failOnError(err, "newConsue error")
 	return msgs
+}
+
+//set the Qos size
+func (self *RabbitMq) SetQos(dat *QosType) {
+	err := self.Channel.Qos(dat.PrefetchCount, dat.PrefetchSize, dat.Global)
 }
