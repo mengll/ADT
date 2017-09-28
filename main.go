@@ -2,6 +2,7 @@
 package main
 
 import (
+	"ADT/controller"
 	"fmt"
 	"net/http"
 )
@@ -29,7 +30,7 @@ func dt(a string, b string) {
 func SaveRabbit(w http.ResponseWriter, r *http.Request) {
 	//adt := &AdtData{}
 	qu := r.URL.Query()
-	gameid := qu.Get("gameid")
+	gameid := qu.Get("type")
 
 	//return back the data
 
@@ -39,14 +40,26 @@ func SaveRabbit(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println(len(imei))
 
+	controller.SendBrocast(gameid, imei)
+
 	fmt.Println(imei)
+
+	//send the data to
+
 	//chuangjian yige weifuwu de kuangjia de shixian
 	w.Write([]byte(gameid))
+
 }
 
-func main1() {
-	dt("2", "2")
+func main() {
+
+	//	controller.Ch.Connect()
+	defer func() {
+		fmt.Println("end main")
+	}()
+
 	fmt.Println("Hello World!")
 	http.HandleFunc("/adt", SaveRabbit)
 	http.ListenAndServe(":8080", nil)
+	controller.InitRecivem()
 }

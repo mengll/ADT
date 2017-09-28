@@ -153,6 +153,7 @@ func (self *RabbitMq) NewConsumeDatType(q amqp.Queue) *ConsumeType {
 //create consumeDat
 
 func (self *RabbitMq) NewConsume(dat *ConsumeType) <-chan amqp.Delivery {
+	fmt.Println(dat)
 	msgs, err := self.Channel.Consume(dat.Queue, dat.Consumer, true, dat.Exclusive, dat.Nolocal, dat.Nowait, nil)
 	failOnError(err, "newConsue error")
 	return msgs

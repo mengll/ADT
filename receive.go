@@ -6,14 +6,14 @@ import (
 	"log"
 )
 
-func main() {
+func maint() {
 
 	//1 create all
 	ch := RabbitMq.NewRabbitMq("amqp://guest:guest@127.0.0.1:5672/")
 	//2 connect
 	ch.Connect()
 	//close
-	defer ch.Closeq()
+	//defer ch.Closeq()
 
 	//3 crewate exchangetype
 	exdata := ch.NewExchangeDecType()
@@ -54,6 +54,7 @@ func main() {
 	go func() {
 		for d := range msg {
 			log.Printf(" [x] %s", d.Body)
+			//d.Ack(true) shoudongquerenshoudao,feizen shibai fafougei geibie de jianceshi chuli
 		}
 	}()
 
