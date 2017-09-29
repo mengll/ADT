@@ -44,16 +44,12 @@ func SaveRabbit(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println(imei)
 
-	//send the data to
-
-	//chuangjian yige weifuwu de kuangjia de shixian
 	w.Write([]byte(gameid))
 
 }
 
 func main() {
 
-	//	controller.Ch.Connect()
 	defer func() {
 		fmt.Println("end main")
 	}()
@@ -61,5 +57,7 @@ func main() {
 	fmt.Println("Hello World!")
 	http.HandleFunc("/adt", SaveRabbit)
 	http.ListenAndServe(":8080", nil)
+
+	//queue manage
 	controller.InitRecivem()
 }

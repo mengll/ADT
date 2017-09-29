@@ -11,7 +11,6 @@ func init() {
 	Ch = RabbitMq.NewRabbitMq("amqp://guest:guest@127.0.0.1:5672/")
 	//2 connect
 	Ch.Connect()
-
 	//close
 	//defer Ch.Closeq()
 }

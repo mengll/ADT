@@ -2,18 +2,20 @@ package controller
 
 import (
 	"ADT/RabbitMq"
+
 	"fmt"
+	"io/ioutil"
+	"net/http"
 )
 
 func InitRecivem() {
 	kl := []string{"start", "register", "payment"}
-	//controller.InitRecivem()
+
 	ml := make(chan bool)
 	for _, item := range kl {
 		go StartRecive(item)
 	}
 	<-ml
-
 }
 
 func StartRecive(routerkey string) {
@@ -65,14 +67,13 @@ func StartRecive(routerkey string) {
 			switch routerkey {
 			case "start":
 				fmt.Println("Start")
-				Startm(string(d.Body))
+				Startm(d.Body)
 			case "register":
 				fmt.Println("register")
-				Registerm(string(d.Body))
+				Registerm(d.Body)
 			case "payment":
 				fmt.Println("payment")
-				Paymentm(string(d.Body))
-
+				Paymentm(d.Body)
 			}
 		}
 	}()
@@ -82,18 +83,37 @@ func StartRecive(routerkey string) {
 
 //startfunction
 
-func Startm(dat string) {
-	fmt.Println("hahah This is " + dat)
+func Startm(dat []byte) {
+
+	//json.Unmarshal(dat)
 }
 
 //register manager
 
-func Registerm(dat string) {
-	fmt.Println("register" + dat)
+func Registerm(dat []byte) {
+
 }
 
 //payment manager
 
-func Paymentm(dat string) {
-	fmt.Println(dat + "hjhhh")
+func Paymentm(dat []byte) {
+
+}
+
+//send request data
+
+func SendGetReq(urls string) []byte {
+
+	res, err := http.Get(urls)
+	if err != nil {
+		return []byte("")
+	}
+
+	body, era := ioutil.ReadAll(res.Body)
+
+	if era != nil {
+		return []byte("")
+	}
+	//no content back the platform
+	return body
 }
